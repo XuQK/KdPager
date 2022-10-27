@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +30,16 @@ import androidx.compose.ui.unit.sp
 import github.xuqk.kdpager.KdPager
 import github.xuqk.kdpager.rememberKdPagerState
 import kotlinx.coroutines.launch
+
+const val SAMPLE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sed viverra dolor, at sollicitudin felis. Nullam lacus eros, pulvinar vitae facilisis sed, maximus eu metus. Nulla commodo rutrum tortor. Vivamus porta purus mi, eu tincidunt purus accumsan vel. Aenean condimentum, nisl et dignissim venenatis, ex quam vulputate nulla, tincidunt varius quam magna sit amet turpis. Nulla dictum justo nisi, iaculis ullamcorper dolor pulvinar vitae. Suspendisse potenti. Donec nec urna arcu. Praesent dolor dui, eleifend id mauris a, rhoncus egestas urna. Integer semper placerat gravida. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Mauris quis hendrerit turpis. Suspendisse potenti. Proin ullamcorper, est ut lobortis consequat, sapien lorem ultrices mauris, nec semper velit ex eu diam. Morbi blandit arcu ac orci malesuada fringilla.\n" +
+        "\n" +
+        "Curabitur rutrum libero eget sem tempor fermentum. Maecenas fringilla lacinia lorem vel vehicula. Quisque mi turpis, varius eu nunc nec, iaculis facilisis massa. Morbi porta ut ligula ut porta. Praesent vel nibh blandit, rutrum nunc laoreet, cursus dui. Praesent accumsan, eros id aliquet eleifend, dui erat ultricies lacus, id laoreet eros dui ac nisi. In tincidunt ut elit vel luctus. Proin at odio sed felis pellentesque hendrerit. Nunc rhoncus elit dolor, vel vulputate ante bibendum et. Pellentesque tempor maximus laoreet. In tempor pretium erat, in tristique libero consequat elementum. Etiam placerat turpis nec lacinia pharetra.\n" +
+        "\n" +
+        "Nunc condimentum tincidunt gravida. Nullam tincidunt purus id arcu consectetur blandit. Nunc accumsan purus justo, a egestas ipsum molestie et. Quisque pretium semper massa ac interdum. Nullam accumsan quam at leo pellentesque malesuada. Etiam quis nulla eros. Mauris convallis sem vel iaculis mollis. Aenean odio tortor, blandit ac vulputate vitae, egestas et justo. Ut imperdiet ipsum ut massa mattis, at egestas tortor mollis. Pellentesque in sem sodales, venenatis sem non, maximus metus. Suspendisse potenti. Suspendisse potenti. Proin non porttitor velit. Fusce auctor luctus tristique. Nam et erat mollis, finibus justo nec, dictum lacus.\n" +
+        "\n" +
+        "Morbi diam urna, viverra eget sem in, maximus vulputate leo. Sed ac ligula a eros iaculis tincidunt. Proin sed semper justo, a tincidunt orci. Donec tempor lectus leo, in cursus tortor efficitur sed. Aliquam erat volutpat. In sed urna velit. Integer non sollicitudin nunc. Integer malesuada, lacus sit amet aliquet commodo, libero mi iaculis augue, eu suscipit nibh metus vitae nisl.\n" +
+        "\n" +
+        "Phasellus pulvinar massa justo, vitae aliquam dolor iaculis at. Nam nec viverra est. Donec vestibulum lacus in diam luctus dignissim. Phasellus hendrerit lorem mauris. Aenean aliquam tincidunt rhoncus. Proin pretium risus velit, in lobortis est ultrices sit amet. Integer aliquam eu dui ac sagittis. Etiam pellentesque nibh tristique ornare tincidunt. Etiam in dolor pellentesque, accumsan erat sit amet, bibendum massa. Mauris vulputate tortor dui, quis laoreet mi volutpat non. Vivamus mattis feugiat sem. Phasellus hendrerit tincidunt purus, at semper nisl accumsan ac. Sed augue lacus, eleifend non dignissim a, dignissim eu ipsum."
 
 class MainActivity : ComponentActivity() {
     private val colors = listOf(
@@ -106,6 +118,7 @@ class MainActivity : ComponentActivity() {
                     Column(modifier = Modifier
                         .background(colors[page % colors.size])
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .onSizeChanged {
                             Log.d(
                                 "MainActivity",
@@ -115,20 +128,9 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Text(text = "TabIndex: $page", fontSize = 30.sp)
                         Text(
-                            text = "IT之家了解到，该研究的主要作者、佛蒙特大学精神病学助理教授贝德-查拉尼（Bader Chaarani）告诉法新社，他自己是一个喜欢玩游戏的人，并且拥有神经影像学方面的专业知识，所以自然而然地被吸引到这个话题上。\n" +
-                                    "\n" +
-                                    "之前的研究集中在电子游戏有害的影响上，经常将游戏与抑郁症和攻击性增加联系起来。但查拉尼表示，这些研究由于参与者数量相对较少而受到限制，特别是那些涉及大脑成像的研究。\n" +
-                                    "\n" +
-                                    "在新的研究中，查拉尼及其同事分析了正在进行的大型青少年大脑认知发展（ABCD）研究的数据，该研究由美国国立卫生研究院资助。他们研究了大约 2000 名九岁和十岁儿童的调查答案、认知测试结果和大脑图像，这些儿童被分为两组：从不玩游戏的儿童和每天玩三个小时或以上的儿童。\n" +
-                                    "\n" +
-                                    "每组儿童被安排进行两个任务。第一个任务是看到指向左边或右边的箭头，要求孩子们以最快的速度向左或向右按。他们还被要求在看到“停止”信号时不要按任何东西，以衡量他们对冲动的控制能力如何。\n" +
-                                    "\n" +
-                                    "在第二项任务中，研究人员会向他们会展示一张人脸图片，让他们尝试记住。随后再展示一些人脸图片，询问他们图片是否跟之前展示的人脸图片相匹配，以测试他们的“工作记忆”。“工作记忆”是一种对信息进行暂时加工和贮存的容量有限的记忆系统，在许多复杂的认知活动中起重要作用。\n" +
-                                    "\n" +
-                                    "在使用统计学方法控制变量后，例如父母的收入、智商和心理健康症状，研究小组发现玩视频游戏的一组儿童在这两项任务中的表现始终更好。"
+                            text = SAMPLE_TEXT
                         )
                     }
-
                 }
             }
         }

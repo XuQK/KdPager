@@ -1,5 +1,6 @@
 package github.xuqk.kdpager
 
+import android.util.Log
 import androidx.annotation.FloatRange
 import androidx.annotation.IntRange
 import androidx.compose.animation.core.Animatable
@@ -107,6 +108,10 @@ class KdPagerState(
 
     suspend fun fling(initialVelocity: Float, scrollBy: (Float) -> Unit): Float {
         // fling 速度在 -300 ~ 300 之间的，被认为是静止状态
+        Log.d(
+            "KdPagerState",
+            "fling() called with: initialVelocity = $initialVelocity, scrollBy = $scrollBy"
+        )
         val targetPage = when {
             initialVelocity > 300 -> {
                 if (currentPageOffset < 0) {
