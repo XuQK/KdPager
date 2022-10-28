@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -24,26 +21,24 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-
 
 @Composable
 fun KdPager(
     count: Int,
     modifier: Modifier = Modifier,
     state: KdPagerState = rememberKdPagerState(),
-    itemSpacing: Dp = 30.dp,
-    contentPadding: PaddingValues = PaddingValues(30.dp),
+    itemSpacing: Dp = 0.dp,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     flingBehavior: FlingBehavior = remember { SnapFlingBehavior(pagerState = state) },
     userScrollEnabled: Boolean = true,
     content: @Composable KdNoRecyclePagerScope.(page: Int) -> Unit,
 ) {
-
     val pagerScope = remember(state) { KdNoRecyclePagerScope(state) }
     val consumeFlingNestedScrollConnection = remember {
         ConsumeFlingNestedScrollConnection(
@@ -52,13 +47,17 @@ fun KdPager(
         )
     }
 
-    var pagerSize: IntSize by remember { mutableStateOf(IntSize.Zero) }
+    val configuration = LocalConfiguration.current
+    state.updatePageWidth(configuration.screenWidthDp.dp * 1.1f, false)
     val density = LocalDensity.current
+
     Row(
         modifier = modifier
             .onSizeChanged {
-                pagerSize = it
-                state.pagerSize = it
+                state.updatePageWidth(
+                    with(density) { it.width.toDp() },
+                    true
+                )
             }
             .horizontalScroll(
                 state = state.scrollState,
@@ -83,8 +82,8 @@ fun KdPager(
                     // See: https://github.com/google/accompanist/issues/347
                     .nestedScroll(connection = consumeFlingNestedScrollConnection)
                     // Constraint the content width to be <= than the width of the pager.
-                    .width(with(density) { pagerSize.width.toDp() })
-                    .wrapContentSize()
+                    .width(state.pageWidth)
+                    .fillMaxHeight()
                     .padding(contentPadding)
             ) {
                 pagerScope.content(page)

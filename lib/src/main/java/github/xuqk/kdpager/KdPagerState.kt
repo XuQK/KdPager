@@ -1,6 +1,5 @@
 package github.xuqk.kdpager
 
-import android.util.Log
 import androidx.annotation.FloatRange
 import androidx.annotation.IntRange
 import androidx.compose.animation.core.Animatable
@@ -19,45 +18,48 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Composable
-fun rememberKdPagerState(
-    @IntRange(from = 0) initialPage: Int = 0,
-): KdPagerState = rememberSaveable(saver = KdPagerState.Saver) {
-    KdPagerState(
-        currentPage = initialPage,
-    )
+fun rememberKdPagerState(): KdPagerState = rememberSaveable(saver = KdPagerState.Saver) {
+    KdPagerState()
 }
 
 @Stable
-class KdPagerState(
-    @IntRange(from = 0) currentPage: Int = 0,
-) : ScrollableState {
-    val scrollState = ScrollState(0)
+class KdPagerState private constructor(@IntRange(from = 0) initialScrollValue: Int = 0) :
+    ScrollableState {
 
-    var pagerSize = IntSize.Zero
-    var pageBounds = mutableListOf<Rect>()
+    constructor() : this(0)
 
-    var itemSpacing: Float = 0f
+    internal val scrollState = ScrollState(initialScrollValue)
+
+    /**
+     * 记录的 Pager 宽度，用于 Pager 的子 Box 宽度设置
+     *
+     * 此值会在重组的时候设置初始值，初始值为 1.1 倍屏幕宽度。
+     * 然后在 Pager 尺寸测量完毕后，被设置为准确值。
+     *
+     * 此值如果不记录在这里，那当 Pager 组件消失，然后重新出现时，如果此时 scrollState.value 不为 0，视觉效果会出现问题
+     */
+    internal var pageWidth: Dp = Dp.Unspecified
+
+    private var pageBounds = mutableListOf<Rect>()
+
+    private var itemSpacing: Float = 0f
 
     private val _currentPage: Int by derivedStateOf {
-        try {
-            val centerX = pagerSize.width / 2 + scrollState.value
-            pageBounds.forEachIndexed { index, rect ->
-                if (index == 0) {
-                    if (centerX <= (rect.right + itemSpacing / 2)) return@derivedStateOf 0
-                } else {
-                    if (centerX >= (rect.left - itemSpacing / 2) && centerX <= (rect.right + itemSpacing / 2)) {
-                        return@derivedStateOf index
-                    }
+        val centerX = (pageBounds.firstOrNull()?.width ?: 0f) / 2 + scrollState.value
+        pageBounds.forEachIndexed { index, rect ->
+            if (index == 0) {
+                if (centerX <= (rect.right + itemSpacing / 2)) return@derivedStateOf 0
+            } else {
+                if (centerX >= (rect.left - itemSpacing / 2) && centerX <= (rect.right + itemSpacing / 2)) {
+                    return@derivedStateOf index
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
         0
     }
@@ -74,15 +76,20 @@ class KdPagerState(
         get() = pageBounds.size
 
     val currentPageOffset: Float by derivedStateOf {
-        try {
-            (pageBounds[_currentPage].left - scrollState.value) / pageBounds[_currentPage].width
-        } catch (e: Exception) {
-            e.printStackTrace()
-            0f
+        val currentPageBounds = pageBounds.getOrNull(_currentPage) ?: return@derivedStateOf 0f
+        (scrollState.value - currentPageBounds.left) / currentPageBounds.width
+    }
+
+    /**
+     * 更新 Pager 宽度
+     */
+    internal fun updatePageWidth(width: Dp, force: Boolean) {
+        if (pageWidth == Dp.Unspecified || force) {
+            pageWidth = width
         }
     }
 
-    fun updatePageBounds(count: Int, index: Int, bounds: Rect, itemSpacing: Float) {
+    internal fun updatePageBounds(count: Int, index: Int, bounds: Rect, itemSpacing: Float) {
         this.itemSpacing = itemSpacing
         if (count != pageCount) {
             pageBounds = MutableList(count) { pageBounds.getOrElse(it) { Rect.Zero } }
@@ -106,22 +113,18 @@ class KdPagerState(
         scrollState.scrollTo(targetValue.toInt())
     }
 
-    suspend fun fling(initialVelocity: Float, scrollBy: (Float) -> Unit): Float {
+    internal suspend fun fling(initialVelocity: Float, scrollBy: (Float) -> Unit): Float {
         // fling 速度在 -300 ~ 300 之间的，被认为是静止状态
-        Log.d(
-            "KdPagerState",
-            "fling() called with: initialVelocity = $initialVelocity, scrollBy = $scrollBy"
-        )
         val targetPage = when {
             initialVelocity > 300 -> {
-                if (currentPageOffset < 0) {
+                if (currentPageOffset > 0) {
                     currentPage + 1
                 } else {
                     currentPage
                 }
             }
             initialVelocity < -300 -> {
-                if (currentPageOffset < 0) {
+                if (currentPageOffset > 0) {
                     currentPage
                 } else {
                     currentPage - 1
@@ -133,7 +136,11 @@ class KdPagerState(
         val targetValue = pageBounds[targetPage].left
         val finalValue = targetValue - scrollState.value
         var scrolledValue = 0f
-        Animatable(0f).animateTo(finalValue, spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow), initialVelocity) {
+        Animatable(0f).animateTo(
+            finalValue,
+            spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow),
+            initialVelocity
+        ) {
             val v = if (finalValue > 0) {
                 value.coerceAtMost(finalValue) - scrolledValue
             } else {
@@ -167,17 +174,17 @@ class KdPagerState(
 
     companion object {
         /**
-         * The default [Saver] implementation for [PagerState].
+         * The default [Saver] implementation for [KdPagerState].
          */
         val Saver: Saver<KdPagerState, *> = listSaver(
             save = {
                 listOf<Any>(
-                    it.currentPage,
+                    it.scrollState.value,
                 )
             },
             restore = {
                 KdPagerState(
-                    currentPage = it[0] as Int,
+                    initialScrollValue = it[0] as Int,
                 )
             }
         )
