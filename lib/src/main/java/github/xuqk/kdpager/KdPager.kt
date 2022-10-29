@@ -27,19 +27,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 
+/**
+ * @param expectedPageWidth KdPager 最终会测量出来的宽度，尽量设置一个准确值，可以优化视觉效果。默认值为 Dp.Unspecified, 直接采用屏幕宽度。
+ * 如果此值和测量出来的最终值不匹配，且 Page 页面稍微复杂一点，比如是个 LazyColumn 嵌套 Row 嵌套 Box，那么在渲染过程中会看到明显的宽度变化，视觉体验不美丽。
+ */
 @Composable
 fun KdPager(
     count: Int,
     modifier: Modifier = Modifier,
     state: KdPagerState = rememberKdPagerState(),
+    expectedPageWidth: Dp = Dp.Unspecified,
     itemSpacing: Dp = 0.dp,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     flingBehavior: FlingBehavior = remember { SnapFlingBehavior(pagerState = state) },
     userScrollEnabled: Boolean = true,
-    content: @Composable KdNoRecyclePagerScope.(page: Int) -> Unit,
+    content: @Composable KdPagerScope.(page: Int) -> Unit,
 ) {
-    val pagerScope = remember(state) { KdNoRecyclePagerScope(state) }
+    val pagerScope = remember(state) { KdPagerScope(state) }
     val consumeFlingNestedScrollConnection = remember {
         ConsumeFlingNestedScrollConnection(
             consumeHorizontal = true,
@@ -47,8 +52,12 @@ fun KdPager(
         )
     }
 
-    val configuration = LocalConfiguration.current
-    state.updatePageWidth(configuration.screenWidthDp.dp * 1.1f, false)
+    if (expectedPageWidth == Dp.Unspecified) {
+        state.updatePageWidth(LocalConfiguration.current.screenWidthDp.dp, false)
+    } else {
+        state.updatePageWidth(expectedPageWidth, false)
+    }
+
     val density = LocalDensity.current
 
     Row(
@@ -140,7 +149,7 @@ private fun Velocity.consume(
     y = if (consumeVertical) this.y else 0f,
 )
 
-class KdNoRecyclePagerScope(
+class KdPagerScope(
     private val state: KdPagerState,
 ) {
     val currentPage: Int get() = state.currentPage

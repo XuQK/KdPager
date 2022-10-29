@@ -28,6 +28,9 @@ fun rememberKdPagerState(): KdPagerState = rememberSaveable(saver = KdPagerState
     KdPagerState()
 }
 
+/**
+ * 由于目前无法实现初次初始化时，预设 currentPage，所以带参数的私有构造方法仅用于状态恢复，故设为 private
+ */
 @Stable
 class KdPagerState private constructor(@IntRange(from = 0) initialScrollValue: Int = 0) :
     ScrollableState {
