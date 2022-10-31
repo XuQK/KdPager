@@ -14,9 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.MainScope
@@ -47,7 +49,7 @@ class KdPagerState private constructor(@IntRange(from = 0) initialScrollValue: I
      *
      * 此值如果不记录在这里，那当 Pager 组件消失，然后重新出现时，如果此时 scrollState.value 不为 0，视觉效果会出现问题
      */
-    internal var pageWidth: Dp = Dp.Unspecified
+    internal var pageWidth: Dp by mutableStateOf(Dp.Unspecified)
 
     private var pageBounds = mutableListOf<Rect>()
 
