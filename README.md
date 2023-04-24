@@ -1,5 +1,7 @@
 [![](https://jitpack.io/v/XuQK/KdPager.svg)](https://jitpack.io/#XuQK/KdPager)
 
+# 已废弃（Deprecated）请使用 Compose 1.4.0+ 的 Pager
+
 # 声明
 
 这是一个基于 Row 实现的，无 Lazy 功能的，横向滑动的 Pager，代码主体部分参考了 Pager 的实现。
